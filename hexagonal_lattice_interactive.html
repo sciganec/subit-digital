@@ -3,55 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hexagonal Lattice Visualization</title>
-    <script src="https://d3js.org/d3.v6.min.js"></script>
+    <title>Hexagonal Lattice Interactive Visualization</title>
     <style>
-        body { font-family: Arial, sans-serif; }
-        .hexagon { stroke: #333; stroke-width: 1px; cursor: pointer; }
-        .highlight { fill: orange; }
+        body {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            height: 100vh;
+            margin: 0;
+        }
+        #canvas {
+            border: 1px solid #ccc;
+            background-color: #f9f9f9;
+        }
+        #sidebar {
+            width: 250px;
+            padding: 10px;
+            background: #fff;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+        }
+        #sidebar h2 {
+            margin: 0;
+        }
+        .circle {
+            border-radius: 50%;
+            position: absolute;
+        }
     </style>
 </head>
 <body>
-    <h1>Hexagonal Lattice Topology</h1>
-    <svg id="hexCanvas" width="800" height="600"></svg>
-    <script>
-        const width = 800;
-        const height = 600;
-        const radius = 25;
+<div id="sidebar">
+    <h2>Statistics</h2>
+    <div id="stats"></div>
+</div>
+<canvas id="canvas" width="800" height="600"></canvas>
+<script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const radius = 20;
 
-        const svg = d3.select("#hexCanvas");
+    // Topology data for hexagonal grid
+    const topology = [6, 12, 6, 2];
 
-        // Hexagon path generator
-        const hexagon = d3.line()
-            .x((d) => d[0])
-            .y((d) => d[1]);
+    // Function to draw hexagonal grid
+    function drawHexagonalGrid() {
+        const hexHeight = Math.sqrt(3) * radius;
+        const hexWidth = 2 * radius;
+        let xOffset = hexWidth * 0.75;
+        let yOffset = hexHeight;
 
-        const generateHexagon = (cx, cy) => {
-            return d3.range(6).map((i) => {
-                const angle = 2 * Math.PI / 6 * i;
-                return [cx + radius * Math.cos(angle), cy + radius * Math.sin(angle)];
-            });
-        };
-
-        const drawHexagonalLattice = (cols, rows) => {
-            for (let row = 0; row < rows; row++) {
-                for (let col = 0; col < cols; col++) {
-                    const cx = col * radius * 1.5;
-                    const cy = row * radius * Math.sqrt(3) + (col % 2) * radius * Math.sqrt(3) / 2;
-                    const hexCoords = generateHexagon(cx, cy);
-                    svg.append("path")
-                        .attr("class", "hexagon")
-                        .attr("d", hexagon(hexCoords))
-                        .attr("transform", `translate(${cx}, ${cy})`)
-                        .on("click", function() {
-                            d3.selectAll(".hexagon").classed("highlight", false);
-                            d3.select(this).classed("highlight", true);
-                        });
+        for (let row = 0; row < 5; row++) {
+            for (let col = 0; col < topology[row % topology.length]; col++) {
+                const x = col * xOffset + (row % 2) * (hexWidth / 2);
+                const y = row * yOffset;
+                ctx.beginPath();
+                ctx.moveTo(x + radius * Math.cos(0), y + radius * Math.sin(0));
+                for (let angle = 0; angle < 6; angle++) {
+                    ctx.lineTo(x + radius * Math.cos(angle * Math.PI / 3), y + radius * Math.sin(angle * Math.PI / 3));
                 }
+                ctx.closePath();
+                ctx.fillStyle = `hsl(${Math.random() * 360}, 100%, 75%)`;
+                ctx.fill();
+                ctx.stroke();
             }
-        };
+        }
+    }
 
-        drawHexagonalLattice(12, 8);
-    </script>
+    // Click interaction
+    canvas.addEventListener('click', (event) => {
+        const rect = canvas.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+        const stats = `Clicked at (${x.toFixed(2)}, ${y.toFixed(2)})`;
+        document.getElementById('stats').textContent = stats;
+    });
+
+    // Draw the grid
+    drawHexagonalGrid();
+</script>
 </body>
 </html>
